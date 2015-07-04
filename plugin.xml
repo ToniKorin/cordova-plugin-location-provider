@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
+        id="com.tonikorin.cordova.plugin.LocationProvider" 
+        version="1.0.0">
+
+    <name>LocationProvider</name>
+
+    <description>
+        This Android background service provides the location of the device via HTTP-POST e.g. triggered by GCM notification.
+    </description>
+
+    <keywords>Location, Android Service</keywords>
+	<repo>https://github.com/ToniKorin/cordova-plugin-location-provider</repo>
+    <license>Apache 2.0</license>
+
+    <author>Toni Korin</author>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <!-- js -->
+    <js-module src="www/location-provider.js" name="LocationProvider">
+        <clobbers target="cordova.plugins.LocationProvider" />
+    </js-module>
+	
+    <!-- android -->
+    <platform name="android">
+	
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="LocationProvider" >
+                <param name="android-package"
+                       value="com.tonikorin.cordova.plugin.LocationProvider"/>
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <service android:name="com.tonikorin.cordova.plugin.LocationProvider.LocationService" />
+        </config-file>
+        
+        <config-file target="AndroidManifest.xml" parent="/manifest">
+            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+            <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+            <uses-permission android:name="android.permission.INTERNET" />
+        </config-file>
+
+        <source-file src="src/android/LocationProviderPlugin.java"  target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
+        <source-file src="src/android/LocationService.java"         target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
+
+    </platform>
+
+</plugin>
