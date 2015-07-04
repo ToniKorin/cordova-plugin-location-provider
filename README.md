@@ -1,4 +1,4 @@
-# Autostart plugin #
+# LocationProvider plugin #
 This [Cordova][cordova] plugin implements __Android__ background service for location queries triggered by e.g. GCM notification. The plugin is also compatible with [PhoneGap Build][PGB].
 
 ## Supported Platforms ##
