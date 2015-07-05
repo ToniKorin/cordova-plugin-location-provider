@@ -27,6 +27,7 @@ import android.os.Bundle;
 import android.content.Context;
 import android.content.SharedPreferences;
 import org.json.JSONObject;
+import org.json.JSONArray;
 import org.json.JSONException;
 import java.util.Iterator;
 import java.net.URL;
@@ -89,8 +90,8 @@ public class LocationService extends IntentService {
             
     Log.d(TAG, "Handle location query...");
     
-    // Store details about latest location query
-    // todo writeUpdateStatus(messageIn);
+    // Store details about location query
+    updateLocateHistory(messageIn);
 
     String ownName = config.optString("member","");
 
@@ -127,7 +128,7 @@ public class LocationService extends IntentService {
     try
     {
         Log.d(TAG,"myContext: " + myContext.getPackageName());
-        new MyLocation(myContext, myLocationResult,  messageIn.optInt("accuracy"), 60 /* sec timeout */).start();
+        new MyLocation(myContext, myLocationResult,  messageIn.optInt("accuracy"), 110 /* sec timeout */).start();
         JSONObject location = myLocationResult.getJsonLocation();
         Log.d(TAG,"Background position accuracy: " + location.optInt("accuracy"));
         msgServer.post("POSITION", location.toString());
@@ -202,7 +203,7 @@ public class LocationService extends IntentService {
             }
             public JSONObject getJsonLocation() throws JSONException, InterruptedException {
             // todo round and convert or maybe client is enough...
-                locationLatch.await(2, TimeUnit.MINUTES);            
+                locationLatch.await(2, TimeUnit.MINUTES); // wait max 2 minutes        
                 JSONObject loc = new JSONObject();
                 if(location == null) throw new InterruptedException();
                 loc.put("latitude", location.getLatitude());
@@ -212,14 +213,47 @@ public class LocationService extends IntentService {
                 loc.put("altitudeAccuracy", "-"); // not supported in Android
                 loc.put("heading", location.getBearing());
                 loc.put("speed", location.getSpeed());
-                loc.put("timestamp", this.getDateAndTimeString(location.getTime()));
+                loc.put("timestamp", getDateAndTimeString(location.getTime()));
                 return loc;
             }
-            public String getDateAndTimeString(long utcTime){
-                Date date = new Date(utcTime);
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");    
-                return sdf.format(date);
-            }
     }
+    
+    private String getDateAndTimeString(long utcTime){
+        Date date = new Date(utcTime);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");    
+        return sdf.format(date);
+    }
+    
+    private void updateLocateHistory(JSONObject messageIn) throws JSONException{   
+        // Read current history
+        SharedPreferences sp = myContext.getSharedPreferences(LocationService.PREFS_NAME, Context.MODE_PRIVATE);
+        String historyJsonStr = sp.getString(LocationService.HISTORY_NAME, "{}");
+        JSONObject history = new JSONObject(historyJsonStr);
+        // Current locate      
+        JSONObject updateStatus = new JSONObject();
+        updateStatus.put("member", messageIn.optString("memberName",""));
+        updateStatus.put("team", messageIn.optString("teamId",""));
+        updateStatus.put("date", getDateAndTimeString(System.currentTimeMillis()));
+        updateStatus.put("target", messageIn.optString("target",""));
+        history.put("updateStatus",updateStatus);
+        // History lines...
+        JSONArray historyLines = history.optJSONArray("lines");
+        if(historyLines==null) historyLines = new JSONArray();
+        String target = "";
+        if (updateStatus.getString("target").equals(""))
+            target = updateStatus.optString("team");
+        else
+            target = updateStatus.optString("target");      
+        String historyLine = updateStatus.getString("member") + " (" + target + ") " + updateStatus.getString("date") + "\n";        
+        historyLines.put(historyLine);
+        if(historyLines.length() > 200) historyLines.remove(0); // store only last 200 locate queries
+        history.put("lines",historyLines);
+        // Save new history
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(LocationService.HISTORY_NAME, history.toString()); 
+        editor.commit();
+        //Log.d(TAG, "history:" + history.toString());
+    }
+    
 } 
   
