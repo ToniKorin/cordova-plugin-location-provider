@@ -23,10 +23,14 @@ var exec    = require('cordova/exec');
 
 /* Define the configuration */
 exports.setConfiguration = function (config) {
-    cordova.exec(null, null, 'LocationProvider', 'setConfiguration', [config]);
+    cordova.exec(null, null, 'LocationProviderPlugin', 'setConfiguration', [config]);
 };
 
 /* Fetch and clear the Locate history */
 exports.getAndClearHistory = function (successCallback) {
-    cordova.exec(successCallback, null, 'LocationProvider', 'getAndClearHistory', []);
+    cordova.exec(successCallback, null, 'LocationProviderPlugin', 'getAndClearHistory', []);
+};
+
+exports.startService = function (notification) { // testing purpose
+    cordova.exec(null, null, 'LocationProviderPlugin', 'startService', [notification]);
 };

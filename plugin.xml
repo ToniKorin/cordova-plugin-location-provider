@@ -28,9 +28,9 @@
     <platform name="android">
 	
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="LocationProvider" >
+            <feature name="LocationProviderPlugin" >
                 <param name="android-package"
-                       value="com.tonikorin.cordova.plugin.LocationProvider"/>
+                       value="com.tonikorin.cordova.plugin.LocationProvider.LocationProviderPlugin"/>
             </feature>
         </config-file>
 
@@ -46,6 +46,7 @@
 
         <source-file src="src/android/LocationProviderPlugin.java"  target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
         <source-file src="src/android/LocationService.java"         target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
+        <source-file src="src/android/MyLocation.java"              target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
 
     </platform>
 

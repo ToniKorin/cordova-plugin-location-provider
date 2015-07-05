@@ -23,13 +23,17 @@ package com.tonikorin.cordova.plugin.LocationProvider;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import android.content.Context;
+import android.content.Intent;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 import android.content.SharedPreferences;
 import com.tonikorin.cordova.plugin.LocationProvider.LocationService;
+import android.util.Log;
 
 public class LocationProviderPlugin extends CordovaPlugin {
+    
+    public static final String TAG = "LocationProviderPlugin";
 
     /**
      * Executes the request.
@@ -54,12 +58,16 @@ public class LocationProviderPlugin extends CordovaPlugin {
             JSONObject history = readAndClearHistory();
             callback.success(history);
             return true;
+        } else if ( action.equalsIgnoreCase("startService") ) {
+            String notification = args.getString(0);
+            startService(notification); // for testing your config without GCM
+            return true;
         }
         return false;
     }
 
     private void saveConfiguration(JSONObject config) {
-
+        Log.d(TAG, "saveConfiguration");
         SharedPreferences sp = getSharedPreferences();
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(LocationService.CONFIG_NAME, config.toString()); 
@@ -67,7 +75,7 @@ public class LocationProviderPlugin extends CordovaPlugin {
     }
     
     private JSONObject readAndClearHistory() throws JSONException {
-
+        Log.d(TAG, "readAndClearHistory");
         SharedPreferences sp = getSharedPreferences();
         String historyJsonStr = sp.getString(LocationService.HISTORY_NAME, "{}");
         // Clear
@@ -80,5 +88,14 @@ public class LocationProviderPlugin extends CordovaPlugin {
     private SharedPreferences getSharedPreferences(){
         Context context = cordova.getActivity().getApplicationContext();
         return context.getSharedPreferences(LocationService.PREFS_NAME, Context.MODE_PRIVATE);
+    }
+    
+    private void startService(String notification){
+        Log.d(TAG, "startService");
+        Context context = cordova.getActivity().getApplicationContext();
+        Intent serviceIntent = new Intent();
+        serviceIntent.putExtra("data",notification);
+        serviceIntent.setClassName(context, "com.tonikorin.cordova.plugin.LocationProvider.LocationService");
+        context.startService(serviceIntent);
     }
 }
