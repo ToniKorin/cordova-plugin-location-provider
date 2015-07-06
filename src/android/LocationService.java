@@ -47,7 +47,7 @@ import com.tonikorin.cordova.plugin.LocationProvider.MyLocation.LocationResult;
 public class LocationService extends IntentService {
 
     public static final String PREFS_NAME = "LocationService";
-    public static final String TAG = "Cordova " + PREFS_NAME;
+    private static final String TAG = "Cordova " + PREFS_NAME;
     public static final String CONFIG_NAME = "config";
     public static final String HISTORY_NAME = "history";
     private final MyLocationResult myLocationResult = new MyLocationResult();

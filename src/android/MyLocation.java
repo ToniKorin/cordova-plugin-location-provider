@@ -14,7 +14,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
 
-public class MyLocation extends Thread {
+class MyLocation extends Thread {
     private Timer timer1;
     private Context context;
     private LocationManager lm;

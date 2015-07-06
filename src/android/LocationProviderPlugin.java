@@ -38,7 +38,7 @@ import android.util.Log;
 
 public class LocationProviderPlugin extends CordovaPlugin {
 
-    public static final String TAG = "LocationProviderPlugin";
+    private static final String TAG = "LocationProviderPlugin";
 
     /**
      * Executes the request.
