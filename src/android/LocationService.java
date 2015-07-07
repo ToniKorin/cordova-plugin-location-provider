@@ -112,10 +112,10 @@ public class LocationService extends IntentService {
         }
         msgServer.post("ALIVE");
         try {
-            Log.d(TAG, "myContext: " + myContext.getPackageName());
+            //Log.d(TAG, "myContext: " + myContext.getPackageName());
             new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy"), 110 /* sec timeout */).start();
             JSONObject location = myLocationResult.getJsonLocation();
-            Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
+            //Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
             msgServer.post("POSITION", location.toString());
         } catch (Exception e) {
             Log.e(TAG, "LocationProvider exception ", e);
