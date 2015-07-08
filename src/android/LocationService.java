@@ -128,7 +128,7 @@ public class LocationService extends IntentService
         try
         {
             //Log.d(TAG, "myContext: " + myContext.getPackageName());
-            new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy"), 110 /* sec timeout */).start();
+            new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), config.optInt("timeout",60)).start();
             JSONObject location = myLocationResult.getJsonLocation();
             //Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
             msgServer.post(POSITION, location.toString());
@@ -269,11 +269,11 @@ public class LocationService extends IntentService
             if (location == null) throw new InterruptedException();
             loc.put("latitude", (double) round(location.getLatitude() * ROUND6) / ROUND6); // 6 decimals = 1m accuracy
             loc.put("longitude", (double) round(location.getLongitude() * ROUND6) / ROUND6);
-            loc.put("accuracy", (float) round(location.getAccuracy() * 10) / 10); // 1 decimal
-            loc.put("altitude", location.getAltitude());
+            loc.put("accuracy", round(location.getAccuracy()));
+            loc.put("altitude", round(location.getAltitude()));
             loc.put("altitudeAccuracy", "-"); // not supported in Android
-            loc.put("heading", location.getBearing());
-            loc.put("speed", location.getSpeed());
+            loc.put("heading", round(location.getBearing()));
+            loc.put("speed", round(location.getSpeed()));
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             return loc;
         }
