@@ -36,7 +36,7 @@ cordova plugin add com.tonikorin.cordova.plugin.LocationProvider --searchpath pa
 or to use the latest stable version:
 ```bash
 # ~~ stable version ~~
-cordova plugin add com.tonikorin.cordova.plugin.LocationProvider@1.0.0
+cordova plugin add com.tonikorin.cordova.plugin.LocationProvider@1.0.1
 ```
 
 To remove the plug-in, run the following command:
@@ -47,7 +47,7 @@ cordova plugin rm com.tonikorin.cordova.plugin.LocationProvider
 #### PhoneGap Build ####
 Add the following xml line to your config.xml:
 ```xml
-<gap:plugin platform="android" name="com.tonikorin.cordova.plugin.LocationProvider" version="1.0.0" source="plugins.cordova.io"/>
+<gap:plugin platform="android" name="com.tonikorin.cordova.plugin.LocationProvider" version="1.0.1" source="plugins.cordova.io"/>
 ```
 
 ## History ##
