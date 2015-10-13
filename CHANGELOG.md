@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.1.0 (13.10.2015)
+- Plugin moved to npm
+
 #### Version 1.0.4 (8.7.2015)
 - Location timeout now configurable, default 60 sec
 - Default value of desired accuracy is 50, if not received in notification
