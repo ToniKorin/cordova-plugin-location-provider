@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.1.1 (2.11.2015)
+- Added support for several servers
+
 #### Version 1.1.0 (13.10.2015)
 - Plugin moved to npm
 

@@ -104,24 +104,28 @@ public class LocationService extends IntentService
         JSONObject teams = config.optJSONObject("teams");
         String teamName = "";
         String teamPassword = "";
+        String teamHost = "";
         for (Iterator<String> iter = teams.keys(); iter.hasNext(); )
         {
             String team = iter.next();
             if (team.equals(messageIn.optString("teamId"))) {
                 teamName = teams.optJSONObject(team).optString("name", "");
                 teamPassword = teams.optJSONObject(team).optString("password", "");
+                teamHost = teams.optJSONObject(team).optString("host", "");
                 break;
             }
         }
         if (ownName.equals("") || teamName.equals(""))
             return; // => URI hanging in PostServer
         // Create Messaging Server interface
-        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, config.optString("messageUrl", ""));
+        String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
+        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, messageUrl);
         if (messageIn.optString("memberName").equals(ownName))
         {
             msgServer.post(RESERVED);
             SystemClock.sleep(5000);// 5 sec delay
-            msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), config.optString("pushUrl", ""));
+            String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
+            msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), pushUrl);
             return;
         }
         msgServer.post(ALIVE);
