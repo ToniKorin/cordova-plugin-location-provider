@@ -1,4 +1,8 @@
 ## ChangeLog
+#### Version 1.1.2 (30.12.2015)
+- mTime (epoch) added into location data
+- Android namespace added for VS2015 compatibility
+
 #### Version 1.1.1 (2.11.2015)
 - Added support for several servers
 
