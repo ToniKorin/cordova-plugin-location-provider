@@ -34,7 +34,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.net.HttpURLConnection;
-import java.net.URLConnection;
+import java.util.Calendar;
 import java.util.Iterator;
 import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
@@ -97,8 +97,6 @@ public class LocationService extends IntentService
     private void handleLocationQuery(JSONObject messageIn) throws JSONException, IOException
     {
         Log.d(TAG, "Handle location query...");
-        // Store details about location query
-        updateLocateHistory(messageIn);
         String ownName = config.optString("member", "");
         // Read team password
         JSONObject teams = config.optJSONObject("teams");
@@ -117,24 +115,32 @@ public class LocationService extends IntentService
         }
         if (ownName.equals("") || teamName.equals(""))
             return; // => URI hanging in PostServer
+        // Read team configuration (e.g. icon and schedule)
+        TeamConfig cTeam = new TeamConfig(config, teamName);
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
         MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, messageUrl);
         if (messageIn.optString("memberName").equals(ownName))
         {
+            updateLocateHistory(messageIn,true);
             msgServer.post(RESERVED);
             SystemClock.sleep(5000);// 5 sec delay
             String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
             msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), pushUrl);
             return;
         }
+        // Store details about location query
+        updateLocateHistory(messageIn,cTeam.isBlocked());
+        if(cTeam.isBlocked()) msgServer.addBlockedField();
         msgServer.post(ALIVE);
+        if(cTeam.isBlocked()) return;
         try
         {
             //Log.d(TAG, "myContext: " + myContext.getPackageName());
             new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), config.optInt("timeout",60)).start();
             JSONObject location = myLocationResult.getJsonLocation();
             //Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
+            if(cTeam.getIcon()!= null) msgServer.addIconField(cTeam.getIcon());
             msgServer.post(POSITION, location.toString());
         }
         catch (Exception e)
@@ -152,14 +158,16 @@ public class LocationService extends IntentService
         return sdf.format(date);
     }
 
-    private void updateLocateHistory(JSONObject messageIn) throws JSONException
+    private void updateLocateHistory(JSONObject messageIn, boolean blocked) throws JSONException
     {   // Read current history
         SharedPreferences sp = myContext.getSharedPreferences(LocationService.PREFS_NAME, Context.MODE_PRIVATE);
         String historyJsonStr = sp.getString(LocationService.HISTORY_NAME, "{}");
         JSONObject history = new JSONObject(historyJsonStr);
         // Current locate
+        String member =  messageIn.optString("memberName", "");
+        if(blocked) member = "\u2717 " + member;
         JSONObject updateStatus = new JSONObject();
-        updateStatus.put("member", messageIn.optString("memberName", ""));
+        updateStatus.put("member", member);
         updateStatus.put("team", messageIn.optString("teamId", ""));
         updateStatus.put("date", getDateAndTimeString(System.currentTimeMillis()));
         updateStatus.put("target", messageIn.optString("target", ""));
@@ -167,7 +175,7 @@ public class LocationService extends IntentService
         // History lines...
         JSONArray historyLines = history.optJSONArray("lines");
         if (historyLines == null) historyLines = new JSONArray();
-        String target = "";
+        String target;
         if (updateStatus.getString("target").equals(""))
             target = updateStatus.optString("team");
         else
@@ -251,6 +259,16 @@ public class LocationService extends IntentService
             messageOut.put("content", content);
             post(messageType);
         }
+
+        public void addIconField(String icon) throws JSONException
+        {
+            messageOut.put("icon", icon);
+        }
+
+        public void addBlockedField() throws JSONException
+        {
+            messageOut.put("blocked", true);
+        }
     }
 
     private class MyLocationResult extends LocationResult
@@ -281,6 +299,80 @@ public class LocationService extends IntentService
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
             return loc;
+        }
+    }
+
+    private class TeamConfig
+    {
+        private String icon = null;
+        private boolean blocked = false;
+
+        public TeamConfig(JSONObject conf, String teamName){
+            JSONObject cTeams = conf.optJSONObject("cTeams");
+            long startDate, endDate; // epoch
+            int startTime, endTime; // total minutes from day start
+            String repeat; // weekdays 0-6
+            for (Iterator<String> iter = cTeams.keys(); iter.hasNext(); )
+            {
+                String team = iter.next();
+                if (team.equals(teamName)) {
+                    JSONObject teamJson = cTeams.optJSONObject(team);
+                    icon = teamJson.optString("icon", null);
+                    startDate = teamJson.optInt("startDate", 0);
+                    startTime = teamJson.optInt("startTime", 0);
+                    endDate = teamJson.optInt("endDate", 0);
+                    endTime = teamJson.optInt("endTime", 0);
+                    repeat = teamJson.optString("repeat", ""); //weekdays
+                    blocked = isLocationBlocked(startDate, endDate, startTime, endTime, repeat);
+                    break;
+                }
+            }
+        }
+
+        public String getIcon() {
+            return icon;
+        }
+
+        public boolean isBlocked() {
+            return blocked;
+        }
+
+        private boolean isLocationBlocked(long startDate, long endDate, int startTime, int endTime, String repeat) {
+            if (startDate > 0 || endDate > 0 || !repeat.isEmpty()) {
+                Calendar c = Calendar.getInstance();
+                long time = c.getTimeInMillis();
+                if (startDate > 0) {
+                    long start = startDate + (startTime * 60 * 1000);
+                    if (time < start)
+                        return true;
+                }
+                if (endDate > 0) {
+                    long end = endDate + (endTime * 60 * 1000);
+                    if (time > end)
+                        return true;
+                }
+                if (!repeat.isEmpty()) {
+                    long nowInMinutes = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
+                    if(startTime == 0 && endTime == 0) endTime = 1440; // hole day if not set
+                    int day = c.get(Calendar.DAY_OF_WEEK)-1;
+                    int index = repeat.indexOf(Integer.toString(day));
+                    if (startTime > endTime && index == -1) { // check also previous day
+                        int prevDay = day - 1;
+                        if (prevDay == -1) prevDay = 6;
+                        index = repeat.indexOf(Integer.toString(prevDay));
+                    }
+                    if (index == -1)
+                        return true;
+                    if (startTime < endTime) {
+                        if (nowInMinutes < startTime || nowInMinutes > endTime)
+                            return true;
+                    } else {
+                        if (nowInMinutes < startTime && nowInMinutes > endTime)
+                            return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 
