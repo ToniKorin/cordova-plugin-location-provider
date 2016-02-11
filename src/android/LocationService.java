@@ -98,7 +98,6 @@ public class LocationService extends IntentService
     {
         Log.d(TAG, "Handle location query...");
         String ownName = config.optString("member", "");
-        // Read team password
         JSONObject teams = config.optJSONObject("teams");
         String teamName = "";
         String teamPassword = "";
@@ -115,8 +114,6 @@ public class LocationService extends IntentService
         }
         if (ownName.equals("") || teamName.equals(""))
             return; // => URI hanging in PostServer
-        // Read team configuration (e.g. icon and schedule)
-        TeamConfig cTeam = new TeamConfig(config, teamName);
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
         MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, messageUrl);
@@ -129,6 +126,8 @@ public class LocationService extends IntentService
             msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), pushUrl);
             return;
         }
+        // Read extra team configuration (e.g. icon and schedule)
+        TeamConfig cTeam = new TeamConfig(config, teamName);
         // Store details about location query
         updateLocateHistory(messageIn,cTeam.isBlocked());
         if(cTeam.isBlocked()) msgServer.addBlockedField();
@@ -307,20 +306,20 @@ public class LocationService extends IntentService
         private String icon = null;
         private boolean blocked = false;
 
-        public TeamConfig(JSONObject conf, String teamName){
+        public TeamConfig(JSONObject conf, String teamName)
+        {
             JSONObject cTeams = conf.optJSONObject("cTeams");
             long startDate, endDate; // epoch
             int startTime, endTime; // total minutes from day start
             String repeat; // weekdays 0-6
-            for (Iterator<String> iter = cTeams.keys(); iter.hasNext(); )
-            {
+            for (Iterator<String> iter = cTeams.keys(); iter.hasNext(); ) {
                 String team = iter.next();
                 if (team.equals(teamName)) {
                     JSONObject teamJson = cTeams.optJSONObject(team);
                     icon = teamJson.optString("icon", null);
-                    startDate = teamJson.optInt("startDate", 0);
+                    startDate = teamJson.optLong("startDate", 0);
+                    endDate = teamJson.optLong("endDate", 0);
                     startTime = teamJson.optInt("startTime", 0);
-                    endDate = teamJson.optInt("endDate", 0);
                     endTime = teamJson.optInt("endTime", 0);
                     repeat = teamJson.optString("repeat", ""); //weekdays
                     blocked = isLocationBlocked(startDate, endDate, startTime, endTime, repeat);
@@ -337,7 +336,8 @@ public class LocationService extends IntentService
             return blocked;
         }
 
-        private boolean isLocationBlocked(long startDate, long endDate, int startTime, int endTime, String repeat) {
+        private boolean isLocationBlocked(long startDate, long endDate, int startTime, int endTime, String repeat)
+        {
             if (startDate > 0 || endDate > 0 || !repeat.isEmpty()) {
                 Calendar c = Calendar.getInstance();
                 long time = c.getTimeInMillis();
