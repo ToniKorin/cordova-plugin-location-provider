@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-location-provider" 
-        version="1.1.2">
+        version="1.2.0">
 
     <name>LocationProvider</name>
 
@@ -11,7 +11,7 @@
     </description>
 
     <keywords>Location, Android Service</keywords>
-	<repo>https://github.com/ToniKorin/cordova-plugin-location-provider</repo>
+    <repo>https://github.com/ToniKorin/cordova-plugin-location-provider</repo>
     <license>Apache 2.0</license>
 
     <author>Toni Korin</author>
@@ -24,10 +24,10 @@
     <js-module src="www/location-provider.js" name="LocationProvider">
         <clobbers target="cordova.plugins.LocationProvider" />
     </js-module>
-	
+
     <!-- android -->
     <platform name="android">
-	
+
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="LocationProviderPlugin" >
                 <param name="android-package"

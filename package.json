@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-location-provider",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "\r\n        This Android background service provides the location of the device via HTTP-POST e.g. triggered by GCM notification.\r\n    ",
   "cordova": {
     "id": "cordova-plugin-location-provider",

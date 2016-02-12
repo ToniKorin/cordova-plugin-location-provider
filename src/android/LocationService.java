@@ -35,7 +35,6 @@ import org.json.JSONException;
 
 import java.net.HttpURLConnection;
 import java.util.Calendar;
-import java.util.Iterator;
 import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
 import java.io.OutputStream;
@@ -102,17 +101,15 @@ public class LocationService extends IntentService
         String teamName = "";
         String teamPassword = "";
         String teamHost = "";
-        for (Iterator<String> iter = teams.keys(); iter.hasNext(); )
-        {
-            String team = iter.next();
-            if (team.equals(messageIn.optString("teamId"))) {
-                teamName = teams.optJSONObject(team).optString("name", "");
-                teamPassword = teams.optJSONObject(team).optString("password", "");
-                teamHost = teams.optJSONObject(team).optString("host", "");
-                break;
-            }
+        JSONObject team = null;
+        if(teams != null)
+            team = teams.optJSONObject(messageIn.optString("teamId"));
+        if (team != null) {
+            teamName = team.optString("name", "");
+            teamPassword = team.optString("password", "");
+            teamHost = team.optString("host", "");
         }
-        if (ownName.equals("") || teamName.equals(""))
+        else
             return; // => URI hanging in PostServer
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
@@ -309,22 +306,19 @@ public class LocationService extends IntentService
         public TeamConfig(JSONObject conf, String teamName)
         {
             JSONObject cTeams = conf.optJSONObject("cTeams");
-            long startDate, endDate; // epoch
-            int startTime, endTime; // total minutes from day start
-            String repeat; // weekdays 0-6
-            for (Iterator<String> iter = cTeams.keys(); iter.hasNext(); ) {
-                String team = iter.next();
-                if (team.equals(teamName)) {
-                    JSONObject teamJson = cTeams.optJSONObject(team);
-                    icon = teamJson.optString("icon", null);
-                    startDate = teamJson.optLong("startDate", 0);
-                    endDate = teamJson.optLong("endDate", 0);
-                    startTime = teamJson.optInt("startTime", 0);
-                    endTime = teamJson.optInt("endTime", 0);
-                    repeat = teamJson.optString("repeat", ""); //weekdays
-                    blocked = isLocationBlocked(startDate, endDate, startTime, endTime, repeat);
-                    break;
-                }
+            JSONObject cTeam = null;
+            if(cTeams == null)
+                return;
+            else
+                cTeam = cTeams.optJSONObject(teamName);
+            if( cTeam != null){
+                icon = cTeam.optString("icon", null);
+                long startDate = cTeam.optLong("startDate", 0); // epoch
+                long endDate = cTeam.optLong("endDate", 0);
+                int startTime = cTeam.optInt("startTime", 0); // total minutes from day start
+                int endTime = cTeam.optInt("endTime", 0);
+                String repeat = cTeam.optString("repeat", ""); // weekdays 0-6
+                blocked = isLocationBlocked(startDate, endDate, startTime, endTime, repeat);
             }
         }
 
@@ -352,7 +346,7 @@ public class LocationService extends IntentService
                         return true;
                 }
                 if (!repeat.isEmpty()) {
-                    long nowInMinutes = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
+                    int nowInMinutes = c.get(Calendar.HOUR_OF_DAY) * 60 + c.get(Calendar.MINUTE);
                     if(startTime == 0 && endTime == 0) endTime = 1440; // hole day if not set
                     int day = c.get(Calendar.DAY_OF_WEEK)-1;
                     int index = repeat.indexOf(Integer.toString(day));

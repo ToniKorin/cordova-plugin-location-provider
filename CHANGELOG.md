@@ -1,4 +1,8 @@
 ## ChangeLog
+#### Version 1.2.0 (12.2.2016)
+- optional icon field in POSITION message
+- optional blocked field in ALIVE message 
+
 #### Version 1.1.2 (30.12.2015)
 - mTime (epoch) added into location data
 - Android namespace added for VS2015 compatibility
