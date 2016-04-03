@@ -1,7 +1,10 @@
 ## ChangeLog
+#### Version 1.3.0 (2.4.2016)
+- Optional team specific member name
+
 #### Version 1.2.0 (12.2.2016)
-- optional icon field in POSITION message
-- optional blocked field in ALIVE message 
+- Optional icon field in POSITION message
+- Optional blocked field in ALIVE message 
 
 #### Version 1.1.2 (30.12.2015)
 - mTime (epoch) added into location data

@@ -107,6 +107,7 @@ public class LocationService extends IntentService
         if (team != null) {
             teamName = team.optString("name", "");
             teamPassword = team.optString("password", "");
+            ownName = team.optString("member", ownName);
             teamHost = team.optString("host", "");
         }
         else
