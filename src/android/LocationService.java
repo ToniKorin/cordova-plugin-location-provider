@@ -58,10 +58,12 @@ public class LocationService extends IntentService
     public static final String PREFS_NAME = "LocationService";
     public static final String CONFIG_NAME  = "config";
     public static final String HISTORY_NAME = "history";
-    public static final String ALIVE    = "ALIVE";
-    public static final String POSITION = "POSITION";
-    public static final String FAILURE  = "FAILURE";
-    public static final String RESERVED = "RESERVED";
+    private static final String ALIVE    = "ALIVE";
+    private static final String POSITION = "POSITION";
+    private static final String FAILURE  = "FAILURE";
+    private static final String RESERVED = "RESERVED";
+    private static final String CHAT = "CHAT";
+    private static final String LOCATE = "LOCATE";
 
     public LocationService() {
         super("LocationService");
@@ -85,7 +87,8 @@ public class LocationService extends IntentService
             Bundle extras = intent.getExtras();
             String msgJsonStr = extras.getString("data"); // own "data" property inside "data" property
             JSONObject messageIn = new JSONObject(msgJsonStr);
-            handleLocationQuery(messageIn);
+            String time = extras.getString("time", "");
+            handleLocationQuery(messageIn, time);
         }
         catch (Exception e)
         {
@@ -93,14 +96,14 @@ public class LocationService extends IntentService
         }
     }
 
-    private void handleLocationQuery(JSONObject messageIn) throws JSONException, IOException
+    private void handleLocationQuery(JSONObject messageIn, String time) throws JSONException, IOException
     {
         Log.d(TAG, "Handle location query...");
         String ownName = config.optString("member", "");
         JSONObject teams = config.optJSONObject("teams");
-        String teamName = "";
-        String teamPassword = "";
-        String teamHost = "";
+        String teamName;
+        String teamPassword;
+        String teamHost;
         JSONObject team = null;
         if(teams != null)
             team = teams.optJSONObject(messageIn.optString("teamId"));
@@ -112,12 +115,13 @@ public class LocationService extends IntentService
         }
         else
             return; // => URI hanging in PostServer
+        String msgType = messageIn.optString("messageType", LOCATE);
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
         MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, messageUrl);
         if (messageIn.optString("memberName").equals(ownName))
         {
-            updateLocateHistory(messageIn,true);
+            updateLocateHistory(messageIn,true, msgType, time);
             msgServer.post(RESERVED);
             SystemClock.sleep(5000);// 5 sec delay
             String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
@@ -127,10 +131,10 @@ public class LocationService extends IntentService
         // Read extra team configuration (e.g. icon and schedule)
         TeamConfig cTeam = new TeamConfig(config, teamName);
         // Store details about location query
-        updateLocateHistory(messageIn,cTeam.isBlocked());
+        updateLocateHistory(messageIn,cTeam.isBlocked(), msgType, time);
         if(cTeam.isBlocked()) msgServer.addBlockedField();
         msgServer.post(ALIVE);
-        if(cTeam.isBlocked()) return;
+        if(cTeam.isBlocked() || CHAT.equals(msgType)) return; // skip giving your location
         try
         {
             //Log.d(TAG, "myContext: " + myContext.getPackageName());
@@ -155,33 +159,43 @@ public class LocationService extends IntentService
         return sdf.format(date);
     }
 
-    private void updateLocateHistory(JSONObject messageIn, boolean blocked) throws JSONException
+    private void updateLocateHistory(JSONObject messageIn, boolean blocked, String msgType, String time) throws JSONException
     {   // Read current history
         SharedPreferences sp = myContext.getSharedPreferences(LocationService.PREFS_NAME, Context.MODE_PRIVATE);
         String historyJsonStr = sp.getString(LocationService.HISTORY_NAME, "{}");
         JSONObject history = new JSONObject(historyJsonStr);
-        // Current locate
-        String member =  messageIn.optString("memberName", "");
-        if(blocked) member = "\u2717 " + member;
-        JSONObject updateStatus = new JSONObject();
-        updateStatus.put("member", member);
-        updateStatus.put("team", messageIn.optString("teamId", ""));
-        updateStatus.put("date", getDateAndTimeString(System.currentTimeMillis()));
-        updateStatus.put("target", messageIn.optString("target", ""));
-        history.put("updateStatus", updateStatus);
-        // History lines...
-        JSONArray historyLines = history.optJSONArray("lines");
-        if (historyLines == null) historyLines = new JSONArray();
-        String target;
-        if (updateStatus.getString("target").equals(""))
-            target = updateStatus.optString("team");
-        else
-            target = updateStatus.optString("target");
-        String historyLine = updateStatus.getString("member") + " (" + target + ") " + updateStatus.getString("date") + "\n";
-        historyLines.put(historyLine);
-        if (historyLines.length() > 200)
-            historyLines.remove(0); // store only last 200 locate queries
-        history.put("lines", historyLines);
+        if(CHAT.equals(msgType)){ // CHAT history, save hole message
+            JSONArray chatMessages = history.optJSONArray("chatMessages");
+            if (chatMessages == null) chatMessages = new JSONArray();
+            //Log.d(TAG, "CHAT history TIME: " + time);
+            messageIn.put("time",Long.parseLong(time));
+            chatMessages.put(messageIn.toString());
+            if (chatMessages.length() > 100)
+                chatMessages.remove(0); // store only last 100 chat messages
+            history.put("chatMessages", chatMessages);
+        } else {// Current LOCATE
+            String member = messageIn.optString("memberName", "");
+            if (blocked) member = "\u2717 " + member;
+            JSONObject updateStatus = new JSONObject();
+            updateStatus.put("member", member);
+            updateStatus.put("team", messageIn.optString("teamId", ""));
+            updateStatus.put("date", getDateAndTimeString(System.currentTimeMillis()));
+            updateStatus.put("target", messageIn.optString("target", ""));
+            history.put("updateStatus", updateStatus);
+            // History LOCATE lines...
+            JSONArray historyLines = history.optJSONArray("lines");
+            if (historyLines == null) historyLines = new JSONArray();
+            String target;
+            if (updateStatus.getString("target").equals(""))
+                target = updateStatus.optString("team");
+            else
+                target = updateStatus.optString("target");
+            String historyLine = updateStatus.getString("member") + " (" + target + ") " + updateStatus.getString("date") + "\n";
+            historyLines.put(historyLine);
+            if (historyLines.length() > 200)
+                historyLines.remove(0); // store only last 200 locate queries
+            history.put("lines", historyLines);
+        }
         // Save new history
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(LocationService.HISTORY_NAME, history.toString());
