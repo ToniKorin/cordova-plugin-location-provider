@@ -309,6 +309,7 @@ public class LocationService extends IntentService
             loc.put("speed", round(location.getSpeed()));
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
+            loc.put("age", (new Date()).getTime() - location.getTime());
             return loc;
         }
     }

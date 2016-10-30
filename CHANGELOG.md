@@ -1,5 +1,8 @@
 ## ChangeLog
 #### Version 1.4.0 (22.5.2016)
+- Age field added into location data
+
+#### Version 1.4.0 (22.5.2016)
 - Optional chat history
 
 #### Version 1.3.0 (2.4.2016)
