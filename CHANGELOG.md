@@ -1,5 +1,5 @@
 ## ChangeLog
-#### Version 1.4.0 (22.5.2016)
+#### Version 1.4.1 (30.10.2016)
 - Age field added into location data
 
 #### Version 1.4.0 (22.5.2016)
