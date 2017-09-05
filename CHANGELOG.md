@@ -1,4 +1,10 @@
 ## ChangeLog
+#### Version 1.4.4 (5.9.2017)
+- Optional host address from request
+
+#### Version 1.4.3 (27.5.2017)
+- New security headers 
+
 #### Version 1.4.1 (30.10.2016)
 - Age field added into location data
 

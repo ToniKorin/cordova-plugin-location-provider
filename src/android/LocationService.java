@@ -103,6 +103,7 @@ public class LocationService extends IntentService
         JSONObject teams = config.optJSONObject("teams");
         String teamName;
         String teamPassword;
+        String teamSecret;
         String teamHost;
         JSONObject team = null;
         if(teams != null)
@@ -112,13 +113,15 @@ public class LocationService extends IntentService
             teamPassword = team.optString("password", "");
             ownName = team.optString("member", ownName);
             teamHost = team.optString("host", "");
+            teamHost = messageIn.optString("host", teamHost);
+            teamSecret = team.optString("s");
         }
         else
             return; // => URI hanging in PostServer
         String msgType = messageIn.optString("messageType", LOCATE);
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
-        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, messageUrl);
+        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, teamSecret, messageUrl);
         if (messageIn.optString("memberName").equals(ownName))
         {
             updateLocateHistory(messageIn,true, msgType, time);
@@ -208,16 +211,22 @@ public class LocationService extends IntentService
         private HttpURLConnection con;
         private JSONObject messageOut;
         private OutputStream os;
+        private String xTeam;
+        private String xPass;
+        private String xSecret;
         private String xChannel;
         private String urlString;
         private static final String TOKEN = "TOKEN";
         //private InputStream is;
 
-        public MessageServer(String ownName, String teamName, String teamPassword, String urlMessageServer) throws JSONException, IOException
+        public MessageServer(String ownName, String teamName, String teamPassword, String teamSecret,String urlMessageServer) throws JSONException, IOException
         {  // Create message template for location data
             this.messageOut = new JSONObject();
             this.messageOut.put("memberName", ownName);
             this.messageOut.put("teamId", teamName);
+            this.xTeam = teamName;
+            this.xPass = teamPassword;
+            this.xSecret = teamSecret;
             this.xChannel = "/channel/" + teamName + ":" + teamPassword;
             this.urlString = urlMessageServer;
         }
@@ -251,6 +260,9 @@ public class LocationService extends IntentService
                 con.setRequestProperty("Content-Type", "application/json; charset=utf-8");
                 con.setRequestProperty("Accept", "application/json");
                 con.setRequestProperty("X-channel", xChannel);
+                con.setRequestProperty("X-team", xTeam);
+                con.setRequestProperty("X-pass", xPass);
+                con.setRequestProperty("X-s", xSecret);
                 con.setChunkedStreamingMode(0);
                 // Send POST with JSON message as string
                 os = con.getOutputStream();
