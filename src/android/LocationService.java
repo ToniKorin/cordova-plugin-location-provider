@@ -64,6 +64,7 @@ public class LocationService extends IntentService
     private static final String RESERVED = "RESERVED";
     private static final String CHAT = "CHAT";
     private static final String LOCATE = "LOCATE";
+    private static final String ME = "\u29bf";
 
     public LocationService() {
         super("LocationService");
@@ -178,6 +179,7 @@ public class LocationService extends IntentService
             history.put("chatMessages", chatMessages);
         } else {// Current LOCATE
             String member = messageIn.optString("memberName", "");
+            if (member.equals(ME)) return; // skip history if own query
             if (blocked) member = "\u2717 " + member;
             JSONObject updateStatus = new JSONObject();
             updateStatus.put("member", member);

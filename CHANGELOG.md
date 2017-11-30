@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.4.5 (30.11.2017)
+- History skipped if own request
+
 #### Version 1.4.4 (5.9.2017)
 - Optional host address from request
 
