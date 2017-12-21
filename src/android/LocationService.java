@@ -136,7 +136,7 @@ public class LocationService extends IntentService
         TeamConfig cTeam = new TeamConfig(config, teamName);
         // Store details about location query
         updateLocateHistory(messageIn,cTeam.isBlocked(), msgType, time);
-        if(cTeam.isBlocked()) msgServer.addBlockedField();
+        msgServer.addBlockedField(cTeam.isBlocked());
         msgServer.post(ALIVE);
         if(cTeam.isBlocked() || CHAT.equals(msgType)) return; // skip giving your location
         try
@@ -145,7 +145,8 @@ public class LocationService extends IntentService
             new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), config.optInt("timeout",60)).start();
             JSONObject location = myLocationResult.getJsonLocation();
             //Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
-            if(cTeam.getIcon()!= null) msgServer.addIconField(cTeam.getIcon());
+            msgServer.addIconField(cTeam.getIcon());
+            msgServer.addTrackerOffField(cTeam.getTrackerOff());
             msgServer.post(POSITION, location.toString());
         }
         catch (Exception e)
@@ -287,12 +288,17 @@ public class LocationService extends IntentService
 
         public void addIconField(String icon) throws JSONException
         {
-            messageOut.put("icon", icon);
+            if (icon!=null) messageOut.put("icon", icon);
         }
 
-        public void addBlockedField() throws JSONException
+        public void addTrackerOffField(String trackerOff) throws JSONException
         {
-            messageOut.put("blocked", true);
+            if (trackerOff!=null) messageOut.put("trackerOff", trackerOff);
+        }
+
+        public void addBlockedField(boolean blocked) throws JSONException
+        {
+            if (blocked) messageOut.put("blocked", true);
         }
     }
 
@@ -331,6 +337,7 @@ public class LocationService extends IntentService
     private class TeamConfig
     {
         private String icon = null;
+        private String trackerOff = null;
         private boolean blocked = false;
 
         public TeamConfig(JSONObject conf, String teamName)
@@ -343,6 +350,7 @@ public class LocationService extends IntentService
                 cTeam = cTeams.optJSONObject(teamName);
             if( cTeam != null){
                 icon = cTeam.optString("icon", null);
+                trackerOff = cTeam.optString("trackerOff", null);
                 long startDate = cTeam.optLong("startDate", 0); // epoch
                 long endDate = cTeam.optLong("endDate", 0);
                 int startTime = cTeam.optInt("startTime", 0); // total minutes from day start
@@ -352,9 +360,9 @@ public class LocationService extends IntentService
             }
         }
 
-        public String getIcon() {
-            return icon;
-        }
+        public String getIcon() { return icon;}
+
+        public String getTrackerOff() { return trackerOff;}
 
         public boolean isBlocked() {
             return blocked;

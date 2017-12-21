@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.4.6 (21.12.2017)
+- Optional trackerOff field in POSITION message
+
 #### Version 1.4.5 (30.11.2017)
 - History skipped if own request
 
