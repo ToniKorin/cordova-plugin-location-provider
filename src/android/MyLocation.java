@@ -83,14 +83,21 @@ class MyLocation extends Thread {
             locationResult.gotLocation(null);
             return;
         }
-        if (Looper.myLooper() == null) Looper.prepare();
-        if (gps_enabled)
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListenerGps, Looper.myLooper());
-        if (network_enabled)
-            lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListenerNetwork, Looper.myLooper());
-        timer1 = new Timer();
-        timer1.schedule(new GetLastLocation(Looper.myLooper()), timeout * 1000);
-        Looper.loop();
+        try {
+            if (Looper.myLooper() == null) Looper.prepare();
+            if (gps_enabled)
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListenerGps, Looper.myLooper());
+            if (network_enabled)
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListenerNetwork, Looper.myLooper());
+            timer1 = new Timer();
+            timer1.schedule(new GetLastLocation(Looper.myLooper()), timeout * 1000);
+            Looper.loop();
+        } catch (Exception ex) { // very likely user permission missing...
+            locationResult.gotLocation(null);
+            if (timer1 != null) timer1.cancel();
+            Looper.myLooper().quitSafely();
+            return;
+        }
     }
 
     private void validateLocation(Location location) {

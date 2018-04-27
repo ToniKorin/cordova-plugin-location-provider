@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.4.8 (27.4.2018)
+- Fixed crash caused by missing user permission for location
+
 #### Version 1.4.6 (21.12.2017)
 - Optional trackerOff field in POSITION message
 

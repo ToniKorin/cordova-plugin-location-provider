@@ -142,8 +142,9 @@ public class LocationService extends IntentService
         try
         {
             //Log.d(TAG, "myContext: " + myContext.getPackageName());
-            new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), config.optInt("timeout",60)).start();
-            JSONObject location = myLocationResult.getJsonLocation();
+            int timeout = config.optInt("timeout",60);
+            new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), timeout).start();
+            JSONObject location = myLocationResult.getJsonLocation(timeout+2);
             //Log.d(TAG, "Background position accuracy: " + location.optInt("accuracy"));
             msgServer.addIconField(cTeam.getIcon());
             msgServer.addTrackerOffField(cTeam.getTrackerOff());
@@ -315,9 +316,9 @@ public class LocationService extends IntentService
             locationLatch.countDown(); // release await in getJsonLocation
         }
 
-        public JSONObject getJsonLocation() throws JSONException, InterruptedException
+        public JSONObject getJsonLocation(int timeout) throws JSONException, InterruptedException
         {
-            locationLatch.await(2, TimeUnit.MINUTES); // wait max 2 minutes
+            locationLatch.await(timeout, TimeUnit.SECONDS);
             JSONObject loc = new JSONObject();
             if (location == null) throw new InterruptedException();
             loc.put("latitude", (double) round(location.getLatitude() * ROUND6) / ROUND6); // 6 decimals = 1m accuracy

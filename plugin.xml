@@ -2,12 +2,12 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-location-provider" 
-        version="1.4.6">
+        version="1.4.8">
 
     <name>LocationProvider</name>
 
     <description>
-        This Android background service provides the location of the device via HTTP-POST e.g. triggered by GCM notification.
+        This Android background service provides the location of the device via HTTP-POST e.g. triggered by GCM or FCM notification.
     </description>
 
     <keywords>Location, Android Service</keywords>
