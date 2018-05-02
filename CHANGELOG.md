@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.4.9 (1.5.2018)
+- Added handling of push token updates
+
 #### Version 1.4.8 (27.4.2018)
 - Fixed crash caused by missing user permission for location
 

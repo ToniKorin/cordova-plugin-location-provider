@@ -21,8 +21,8 @@ class MyLocation extends Thread {
     private LocationResult locationResult;
     private boolean gps_enabled = false;
     private boolean network_enabled = false;
-    private int desiredAccuracy = 65;
-    private int timeout = 60;
+    private int desiredAccuracy = 65; // 65 meter
+    private int timeout = 60*1000; // 65 sec
     private LocationListener locationListenerNetwork = new LocationListener() {
         public void onLocationChanged(Location location) {
             validateLocation(location);
@@ -57,7 +57,7 @@ class MyLocation extends Thread {
         // LocationResult callback class to pass location value from MyLocation to user code.
         this.locationResult = result;
         this.desiredAccuracy = accuracy;
-        this.timeout = timeout;
+        this.timeout = timeout * 1000;
     }
 
     public void run() {
@@ -90,7 +90,7 @@ class MyLocation extends Thread {
             if (network_enabled)
                 lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListenerNetwork, Looper.myLooper());
             timer1 = new Timer();
-            timer1.schedule(new GetLastLocation(Looper.myLooper()), timeout * 1000);
+            timer1.schedule(new GetLastLocation(Looper.myLooper()), timeout);
             Looper.loop();
         } catch (Exception ex) { // very likely user permission missing...
             locationResult.gotLocation(null);
@@ -101,8 +101,8 @@ class MyLocation extends Thread {
     }
 
     private void validateLocation(Location location) {
-        if (location.getAccuracy() > desiredAccuracy)
-            return; // continue
+        if (location.getAccuracy() > desiredAccuracy || (System.currentTimeMillis()-location.getTime()) > this.timeout)
+            return; // continue, accuracy or age is not valid
         else { // accuracy ok, stop
             timer1.cancel();
             locationResult.gotLocation(location);

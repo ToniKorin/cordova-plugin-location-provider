@@ -87,9 +87,19 @@ public class LocationService extends IntentService
             // get the input message from intent
             Bundle extras = intent.getExtras();
             String msgJsonStr = extras.getString("data"); // own "data" property inside "data" property
-            JSONObject messageIn = new JSONObject(msgJsonStr);
             String time = extras.getString("time", "");
-            handleLocationQuery(messageIn, time);
+            if (msgJsonStr != null) {
+                JSONObject messageIn = new JSONObject(msgJsonStr);
+                handleLocationQuery(messageIn, time);
+                return;
+            } else {
+                String pushToken = extras.getString("regid");
+                if (pushToken != null){
+                    handlePushTokenUpdates(pushToken);
+                    return;
+                }
+            }
+            Log.e(TAG, "Unknown command, extras:  " + extras.toString());
         }
         catch (Exception e)
         {
@@ -210,6 +220,29 @@ public class LocationService extends IntentService
         //Log.d(TAG, "history:" + history.toString());
     }
 
+    private void handlePushTokenUpdates(String pushToken) {
+        Log.d(TAG, "Handle push token updates...");
+        try {
+            JSONObject teams = config.optJSONObject("teams");
+            if (teams != null) {
+                MessageServer pushServer = new MessageServer();
+                JSONArray teamNames = teams.names();
+                for (int i = 0; i < teamNames.length(); ++i) {
+                    JSONObject team = teams.optJSONObject(teamNames.getString(i));
+                    String teamName = team.optString("name", "");
+                    String ownName = team.optString("member", "");
+                    String teamHost = team.optString("host", "");
+                    String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
+                    pushServer.updatePushToken(ownName, teamName, pushToken, pushUrl);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Log.e(TAG, "updatePushTokens exception ", e);
+        }
+    }
+
     private class MessageServer
     {
         private HttpURLConnection con;
@@ -222,6 +255,9 @@ public class LocationService extends IntentService
         private String urlString;
         private static final String TOKEN = "TOKEN";
         //private InputStream is;
+
+        public MessageServer(){
+        }
 
         public MessageServer(String ownName, String teamName, String teamPassword, String teamSecret,String urlMessageServer) throws JSONException, IOException
         {  // Create message template for location data
@@ -273,11 +309,14 @@ public class LocationService extends IntentService
                 os.write(messageOut.toString().getBytes("UTF-8"));
                 os.flush();
                 Log.d(TAG, "POST response code:" + con.getResponseCode());
+            } catch (Exception e){
+                Log.e(TAG, "POST exception: " + e.getMessage());
+                e.printStackTrace();
             }
             finally
             {
-                os.close();
-                con.disconnect(); // connection just moved to pool
+                if (os!=null) os.close();
+                if (con!=null) con.disconnect(); // connection just moved to pool
             }
         }
 
@@ -330,7 +369,8 @@ public class LocationService extends IntentService
             loc.put("speed", round(location.getSpeed()));
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
-            loc.put("age", (new Date()).getTime() - location.getTime());
+            loc.put("age", System.currentTimeMillis() - location.getTime());
+            //Log.d(TAG, "Time:" + getDateAndTimeString(System.currentTimeMillis()) + " Location age:" + loc.getInt("age"));
             return loc;
         }
     }
