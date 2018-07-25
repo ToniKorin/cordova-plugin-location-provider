@@ -1,4 +1,8 @@
 ## ChangeLog
+
+#### Version 1.4.10 (25.7.2018)
+- Android 8 compatibility for push token updates
+
 #### Version 1.4.9 (1.5.2018)
 - Added handling of push token updates
 

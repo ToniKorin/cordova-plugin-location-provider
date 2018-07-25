@@ -21,6 +21,10 @@
 
 package com.tonikorin.cordova.plugin.LocationProvider;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+
 import android.app.IntentService;
 import android.content.Intent;
 import android.os.Bundle;
@@ -223,6 +227,17 @@ public class LocationService extends IntentService
     private void handlePushTokenUpdates(String pushToken) {
         Log.d(TAG, "Handle push token updates...");
         try {
+            if (android.os.Build.VERSION.SDK_INT >= 26) {
+                String CHANNEL_ID = "LocationService_channel_01";
+                NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                        "...",
+                        NotificationManager.IMPORTANCE_DEFAULT);
+                ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+                Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                        .setContentTitle("...")
+                        .setContentText("...").build();
+                startForeground(999, notification);
+            }
             JSONObject teams = config.optJSONObject("teams");
             if (teams != null) {
                 MessageServer pushServer = new MessageServer();
