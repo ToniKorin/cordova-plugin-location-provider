@@ -230,12 +230,12 @@ public class LocationService extends IntentService
             if (android.os.Build.VERSION.SDK_INT >= 26) {
                 String CHANNEL_ID = "LocationService_channel_01";
                 NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-                        "...",
+                        "Token update",
                         NotificationManager.IMPORTANCE_DEFAULT);
                 ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
                 Notification notification = new Notification.Builder(this, CHANNEL_ID)
-                        .setContentTitle("...")
-                        .setContentText("...").build();
+                        .setContentTitle(getAppName())
+                        .setContentText("Push token updated").build();
                 startForeground(999, notification);
             }
             JSONObject teams = config.optJSONObject("teams");
@@ -256,6 +256,15 @@ public class LocationService extends IntentService
         {
             Log.e(TAG, "updatePushTokens exception ", e);
         }
+    }
+
+    private String getAppName()
+    {
+        Context context = getApplicationContext();
+        CharSequence appName = context
+                        .getPackageManager()
+                        .getApplicationLabel(context.getApplicationInfo());
+        return (String)appName;
     }
 
     private class MessageServer
