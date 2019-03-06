@@ -143,7 +143,8 @@ public class LocationService extends IntentService
             msgServer.post(RESERVED);
             SystemClock.sleep(5000);// 5 sec delay
             String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
-            msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), pushUrl);
+            String uuid = config.optString("uuid", "");
+            msgServer.updatePushToken(ownName, teamName, config.optString("token", ""), uuid, pushUrl);
             return;
         }
         // Read extra team configuration (e.g. icon and schedule)
@@ -240,6 +241,7 @@ public class LocationService extends IntentService
             }
             JSONObject teams = config.optJSONObject("teams");
             if (teams != null) {
+                String uuid = config.optString("uuid", "");
                 MessageServer pushServer = new MessageServer();
                 JSONArray teamNames = teams.names();
                 for (int i = 0; i < teamNames.length(); ++i) {
@@ -248,7 +250,7 @@ public class LocationService extends IntentService
                     String ownName = team.optString("member", "");
                     String teamHost = team.optString("host", "");
                     String pushUrl = config.optString("pushUrl", "").replace("{host}", teamHost);
-                    pushServer.updatePushToken(ownName, teamName, pushToken, pushUrl);
+                    pushServer.updatePushToken(ownName, teamName, pushToken, uuid, pushUrl);
                 }
             }
         }
@@ -295,13 +297,14 @@ public class LocationService extends IntentService
             this.urlString = urlMessageServer;
         }
 
-        public void updatePushToken(String ownName, String teamName, String pushToken, String urlPushServer) throws JSONException, IOException
+        public void updatePushToken(String ownName, String teamName, String pushToken, String uuid, String urlPushServer) throws JSONException, IOException
         {   // Create message template for push server and post it
             this.messageOut = new JSONObject();
             this.messageOut.put("name", ownName);
             this.messageOut.put("team", teamName);
             this.messageOut.put("token", pushToken);
             this.messageOut.put("tokenType", 3); // GCM
+            this.messageOut.put("uuid", uuid);
             this.urlString = urlPushServer;
             this.post(TOKEN);
         }
