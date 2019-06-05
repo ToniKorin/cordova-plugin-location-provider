@@ -1,5 +1,8 @@
 ## ChangeLog
 
+#### Version 1.4.13 (5.7.2019)
+- Android 9 compatibility for push token updates
+
 #### Version 1.4.12 (6.3.2019)
 - UUID towards Push Server
 
