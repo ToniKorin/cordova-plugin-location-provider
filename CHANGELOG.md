@@ -1,4 +1,6 @@
 ## ChangeLog
+#### Version 1.4.14 (1.9.2019)
+- Changed the icon of blocked location query
 
 #### Version 1.4.13 (5.7.2019)
 - Android 9 compatibility for push token updates
