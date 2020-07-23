@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.4.15 (23.7.2020)
+- ACCESS_BACKGROUND_LOCATION permission for API level 29
+
 #### Version 1.4.14 (1.9.2019)
 - Changed the icon of blocked location query
 
