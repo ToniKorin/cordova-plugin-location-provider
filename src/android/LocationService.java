@@ -51,6 +51,7 @@ import java.text.SimpleDateFormat;
 import com.tonikorin.cordova.plugin.LocationProvider.MyLocation;
 import com.tonikorin.cordova.plugin.LocationProvider.MyLocation.LocationResult;
 
+import static android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION;
 import static java.lang.Math.*;
 
 public class LocationService extends IntentService
@@ -158,6 +159,7 @@ public class LocationService extends IntentService
         try
         {
             //Log.d(TAG, "myContext: " + myContext.getPackageName());
+            foregroundServicePriority();
             int timeout = config.optInt("timeout",60);
             new MyLocation(myContext, myLocationResult, messageIn.optInt("accuracy",50), timeout).start();
             JSONObject location = myLocationResult.getJsonLocation(timeout+2);
@@ -258,6 +260,28 @@ public class LocationService extends IntentService
         catch (Exception e)
         {
             Log.e(TAG, "updatePushTokens exception ", e);
+        }
+    }
+
+    private void foregroundServicePriority() {
+        if (android.os.Build.VERSION.SDK_INT < 26) {
+            return;
+        }
+        Log.d(TAG, "Set app to foreground service priority to complete the location service properly...");
+        try {
+            String CHANNEL_ID = "LocationService_channel_02";
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                    "Location priority query",
+                    NotificationManager.IMPORTANCE_DEFAULT);
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+            Notification notification = new Notification.Builder(this, CHANNEL_ID)
+                    .setContentTitle(getAppName())
+                    .setContentText("Your location queried").build();
+            startForeground(9999, notification, FOREGROUND_SERVICE_TYPE_LOCATION);
+        }
+        catch (Exception e)
+        {
+            Log.e(TAG, "foregroundServicePriority exception ", e);
         }
     }
 
@@ -374,13 +398,20 @@ public class LocationService extends IntentService
     {
         private final CountDownLatch locationLatch = new CountDownLatch(1);
         private Location location = null;
+        private boolean deepSleep = false;
         private static final int ROUND6 = 1000000;
 
         @Override
         public void gotLocation(Location location)
         {
+            //Log.v(TAG,"gotLocation from " + location.getProvider());
             this.location = location;
             locationLatch.countDown(); // release await in getJsonLocation
+        }
+
+        @Override
+        public void setInDeepSleepTrue() {
+            deepSleep = true;
         }
 
         public JSONObject getJsonLocation(int timeout) throws JSONException, InterruptedException
@@ -397,7 +428,11 @@ public class LocationService extends IntentService
             loc.put("speed", round(location.getSpeed()));
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
-            loc.put("age", System.currentTimeMillis() - location.getTime());
+            if (deepSleep) { // age is not relevant is deep sleep mode...
+                loc.put("age", 0);
+            } else {
+                loc.put("age", System.currentTimeMillis() - location.getTime());
+            }
             //Log.d(TAG, "Time:" + getDateAndTimeString(System.currentTimeMillis()) + " Location age:" + loc.getInt("age"));
             return loc;
         }

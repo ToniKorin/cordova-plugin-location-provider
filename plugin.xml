@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-location-provider" 
-        version="1.4.15">
+        version="1.5.0">
 
     <name>LocationProvider</name>
 
@@ -36,7 +36,8 @@
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
-            <service android:name="com.tonikorin.cordova.plugin.LocationProvider.LocationService" />
+            <service android:name="com.tonikorin.cordova.plugin.LocationProvider.LocationService"
+                android:foregroundServiceType="location"/>
         </config-file>
         
         <config-file target="AndroidManifest.xml" parent="/manifest">

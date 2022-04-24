@@ -1,4 +1,13 @@
 ## ChangeLog
+#### Version 1.5.0 (24.4.2022)
+- Location as foreground service to avoid throttling of location query
+
+#### Version 1.4.19 (31.7.2020)
+- Improved handling of power save mode
+
+#### Version 1.4.17 (29.7.2020)
+- Improved handling of deep sleep (Doze) mode
+
 #### Version 1.4.15 (23.7.2020)
 - ACCESS_BACKGROUND_LOCATION permission for API level 29
 

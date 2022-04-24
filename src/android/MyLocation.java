@@ -13,6 +13,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.util.Log;
+
+import static android.content.Context.POWER_SERVICE;
 
 class MyLocation extends Thread {
     private Timer timer1;
@@ -23,6 +27,8 @@ class MyLocation extends Thread {
     private boolean network_enabled = false;
     private int desiredAccuracy = 65; // 65 meter
     private int timeout = 60*1000; // 65 sec
+    private static final String TAG = "MyLocation";
+
     private LocationListener locationListenerNetwork = new LocationListener() {
         public void onLocationChanged(Location location) {
             validateLocation(location);
@@ -84,6 +90,7 @@ class MyLocation extends Thread {
             return;
         }
         try {
+            handleDeepSleepAndPowerSaveModes();
             if (Looper.myLooper() == null) Looper.prepare();
             if (gps_enabled)
                 lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListenerGps, Looper.myLooper());
@@ -112,8 +119,23 @@ class MyLocation extends Thread {
         }
     }
 
+    private void handleDeepSleepAndPowerSaveModes(){ // Deep sleep = Doze mode
+        PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
+        if (powerManager != null ) {
+            if (android.os.Build.VERSION.SDK_INT >= 23 && powerManager.isDeviceIdleMode()) {
+                Log.d(TAG, "In deep sleep mode -- Location service is off -- getLastKnownLocation after 1 sec");
+                locationResult.setInDeepSleepTrue();
+                timeout = 1000;
+            } else if (powerManager.isPowerSaveMode()){
+                Log.d(TAG, "Power save mode -- Location service limited -- getLastKnownLocation after 3 sec");
+                timeout = 3000;
+            }
+        }
+    }
+
     public static abstract class LocationResult {
         public abstract void gotLocation(Location location);
+        public abstract void setInDeepSleepTrue();
     }
 
     private class GetLastLocation extends TimerTask {
