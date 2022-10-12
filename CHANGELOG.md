@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.5.1 (12.10.2022)
+- Improved handling of deep sleep (Doze) mode, version 2
+
 #### Version 1.5.0 (24.4.2022)
 - Location as foreground service to avoid throttling of location query
 

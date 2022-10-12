@@ -428,10 +428,10 @@ public class LocationService extends IntentService
             loc.put("speed", round(location.getSpeed()));
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
-            if (deepSleep) { // age is not relevant is deep sleep mode...
-                loc.put("age", 0);
-            } else {
-                loc.put("age", System.currentTimeMillis() - location.getTime());
+            loc.put("age", System.currentTimeMillis() - location.getTime());
+            if (deepSleep) {
+                loc.put("deepSleep", 1);
+                //loc.put("age", 0);
             }
             //Log.d(TAG, "Time:" + getDateAndTimeString(System.currentTimeMillis()) + " Location age:" + loc.getInt("age"));
             return loc;

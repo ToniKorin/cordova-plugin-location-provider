@@ -123,9 +123,9 @@ class MyLocation extends Thread {
         PowerManager powerManager = (PowerManager) context.getSystemService(POWER_SERVICE);
         if (powerManager != null ) {
             if (android.os.Build.VERSION.SDK_INT >= 23 && powerManager.isDeviceIdleMode()) {
-                Log.d(TAG, "In deep sleep mode -- Location service is off -- getLastKnownLocation after 1 sec");
+                Log.d(TAG, "In deep sleep mode -- Location service is limited or off -- getLastKnownLocation after 12 sec");
                 locationResult.setInDeepSleepTrue();
-                timeout = 1000;
+                timeout = 12000;
             } else if (powerManager.isPowerSaveMode()){
                 Log.d(TAG, "Power save mode -- Location service limited -- getLastKnownLocation after 3 sec");
                 timeout = 3000;
