@@ -33,8 +33,16 @@ import org.json.JSONException;
 import android.content.SharedPreferences;
 
 import com.tonikorin.cordova.plugin.LocationProvider.LocationService;
+import com.tonikorin.cordova.plugin.LocationProvider.MyLocation;
 
+import android.location.Location;
 import android.util.Log;
+
+import java.io.IOException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Math.round;
 
 public class LocationProviderPlugin extends CordovaPlugin {
 
@@ -51,8 +59,8 @@ public class LocationProviderPlugin extends CordovaPlugin {
      * @throws JSONException
      */
     @Override
-    public boolean execute(String action, JSONArray args,
-                           CallbackContext callback) throws JSONException {
+    public boolean execute(String action, final JSONArray args,
+                           final CallbackContext callback) throws JSONException {
 
         if (action.equalsIgnoreCase("setConfiguration")) {
             JSONObject config = args.getJSONObject(0);
@@ -61,6 +69,26 @@ public class LocationProviderPlugin extends CordovaPlugin {
         } else if (action.equalsIgnoreCase("getAndClearHistory")) {
             JSONObject history = readAndClearHistory();
             callback.success(history);
+            return true;
+        } else if (action.equalsIgnoreCase("getOwnPosition")) {
+            cordova.getThreadPool().execute(new Runnable() {
+                public void run() {
+                    try {
+                        JSONObject params = args.getJSONObject(0);
+                        JSONObject position = getOwnPosition(params);
+                        if (position == null) {
+                            JSONObject error = new JSONObject();
+                            error.put("message", "generic location provider failure");
+                            error.put("code", -1);
+                            callback.error(error);
+                        } else {
+                            callback.success(position);
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "own position, json failed", e);
+                    }
+                }
+            });
             return true;
         } else if (action.equalsIgnoreCase("startService")) {
             String notification = args.getString(0);
@@ -92,6 +120,57 @@ public class LocationProviderPlugin extends CordovaPlugin {
     private SharedPreferences getSharedPreferences() {
         Context context = cordova.getActivity().getApplicationContext();
         return context.getSharedPreferences(LocationService.PREFS_NAME, Context.MODE_PRIVATE);
+    }
+
+    private class MyOwnLocationResult extends MyLocation.LocationResult {
+        private final CountDownLatch locationLatch = new CountDownLatch(1);
+        private Location location = null;
+
+        @Override
+        public void gotLocation(Location location)
+        {
+            this.location = location;
+            locationLatch.countDown(); // release await in getJsonLocation
+        }
+
+        @Override
+        public void setInDeepSleepTrue() {}
+        @Override
+        public void setPowerSaveTrue() {}
+
+        public JSONObject getJsonOwnLocation(int timeout) throws JSONException, InterruptedException
+        {
+            locationLatch.await(timeout, TimeUnit.SECONDS);
+            JSONObject loc = new JSONObject();
+            JSONObject coords = new JSONObject();
+            if (location == null) throw new InterruptedException();
+            coords.put("latitude", location.getLatitude());
+            coords.put("longitude", location.getLongitude());
+            coords.put("accuracy", round(location.getAccuracy()));
+            coords.put("altitude", round(location.getAltitude()));
+            coords.put("heading", round(location.getBearing()));
+            coords.put("speed", round(location.getSpeed()));
+            loc.put("coords", coords);
+            loc.put("timestamp", location.getTime());
+            return loc;
+        }
+    }
+
+    private JSONObject getOwnPosition(JSONObject config)
+    {
+        Log.d(TAG, "getOwnPosition");
+        Context ctx = cordova.getActivity().getApplicationContext();
+        int accuracy = config.optInt("accuracy",50);
+        int timeout = config.optInt("timeout",60);
+        MyOwnLocationResult myLocationResult = new MyOwnLocationResult();
+        try {
+            new MyLocation(ctx, myLocationResult, accuracy, timeout).start();
+            return myLocationResult.getJsonOwnLocation(timeout + 2);
+        } catch (Exception e)
+        {
+            Log.e(TAG, "Own position exception ", e);
+            return null;
+        }
     }
 
     private void startService(String notification) {

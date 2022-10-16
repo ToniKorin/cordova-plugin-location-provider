@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.5.4 (16.10.2022)
+- Added getOwnPosition method to replace Geolocation API call
+
 #### Version 1.5.1 (12.10.2022)
 - Improved handling of deep sleep (Doze) mode, version 2
 

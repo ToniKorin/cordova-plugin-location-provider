@@ -399,6 +399,7 @@ public class LocationService extends IntentService
         private final CountDownLatch locationLatch = new CountDownLatch(1);
         private Location location = null;
         private boolean deepSleep = false;
+        private boolean powerSave = false;
         private static final int ROUND6 = 1000000;
 
         @Override
@@ -412,6 +413,11 @@ public class LocationService extends IntentService
         @Override
         public void setInDeepSleepTrue() {
             deepSleep = true;
+        }
+
+        @Override
+        public void setPowerSaveTrue() {
+            powerSave = true;
         }
 
         public JSONObject getJsonLocation(int timeout) throws JSONException, InterruptedException
@@ -429,10 +435,8 @@ public class LocationService extends IntentService
             loc.put("timestamp", getDateAndTimeString(location.getTime()));
             loc.put("mTime", location.getTime());
             loc.put("age", System.currentTimeMillis() - location.getTime());
-            if (deepSleep) {
-                loc.put("deepSleep", 1);
-                //loc.put("age", 0);
-            }
+            if (deepSleep) loc.put("deepSleep", 1);
+            if (powerSave) loc.put("powerSave", 1);
             //Log.d(TAG, "Time:" + getDateAndTimeString(System.currentTimeMillis()) + " Location age:" + loc.getInt("age"));
             return loc;
         }

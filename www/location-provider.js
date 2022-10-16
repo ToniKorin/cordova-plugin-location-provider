@@ -31,6 +31,11 @@ exports.getAndClearHistory = function (successCallback) {
     cordova.exec(successCallback, null, 'LocationProviderPlugin', 'getAndClearHistory', []);
 };
 
+/* To get own position to replace Geolocation API call */
+exports.getOwnPosition = function (params, successCallback, errorCallback) {
+    cordova.exec(successCallback, errorCallback, 'LocationProviderPlugin', 'getOwnPosition', [params]);
+};
+
 exports.startService = function (notification) { // testing purpose
     cordova.exec(null, null, 'LocationProviderPlugin', 'startService', [notification]);
 };

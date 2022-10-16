@@ -126,9 +126,11 @@ class MyLocation extends Thread {
                 Log.d(TAG, "In deep sleep mode -- Location service is limited or off -- getLastKnownLocation after 12 sec");
                 locationResult.setInDeepSleepTrue();
                 timeout = 12000;
-            } else if (powerManager.isPowerSaveMode()){
-                Log.d(TAG, "Power save mode -- Location service limited -- getLastKnownLocation after 3 sec");
-                timeout = 3000;
+            }
+            if (powerManager.isPowerSaveMode()){
+                Log.d(TAG, "Power save mode -- Location service limited -- getLastKnownLocation after 14 sec");
+                locationResult.setPowerSaveTrue();
+                timeout = 14000;
             }
         }
     }
@@ -136,6 +138,7 @@ class MyLocation extends Thread {
     public static abstract class LocationResult {
         public abstract void gotLocation(Location location);
         public abstract void setInDeepSleepTrue();
+        public abstract void setPowerSaveTrue();
     }
 
     private class GetLastLocation extends TimerTask {
