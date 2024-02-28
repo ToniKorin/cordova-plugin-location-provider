@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.5.5 (28.2.2024)
+- Added app version to service requests
+
 #### Version 1.5.4 (16.10.2022)
 - Added getOwnPosition method to replace Geolocation API call
 

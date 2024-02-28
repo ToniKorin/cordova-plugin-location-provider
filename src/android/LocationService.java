@@ -138,7 +138,8 @@ public class LocationService extends IntentService
         String msgType = messageIn.optString("messageType", LOCATE);
         // Create Messaging Server interface
         String messageUrl = config.optString("messageUrl", "").replace("{host}", teamHost);
-        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, teamSecret, messageUrl);
+        Integer version = config.optInt("version", 1609);
+        MessageServer msgServer = new MessageServer(ownName, teamName, teamPassword, teamSecret, messageUrl, version);
         if (messageIn.optString("memberName").equals(ownName))
         {
             updateLocateHistory(messageIn,true, msgType, time);
@@ -304,13 +305,14 @@ public class LocationService extends IntentService
         private String xSecret;
         private String xChannel;
         private String urlString;
+        private Integer version; // app version
         private static final String TOKEN = "TOKEN";
         //private InputStream is;
 
         public MessageServer(){
         }
 
-        public MessageServer(String ownName, String teamName, String teamPassword, String teamSecret,String urlMessageServer) throws JSONException, IOException
+        public MessageServer(String ownName, String teamName, String teamPassword, String teamSecret,String urlMessageServer, Integer version) throws JSONException, IOException
         {  // Create message template for location data
             this.messageOut = new JSONObject();
             this.messageOut.put("memberName", ownName);
@@ -320,6 +322,7 @@ public class LocationService extends IntentService
             this.xSecret = teamSecret;
             this.xChannel = "/channel/" + teamName + ":" + teamPassword;
             this.urlString = urlMessageServer;
+            this.version = version;
         }
 
         public void updatePushToken(String ownName, String teamName, String pushToken, String uuid, String urlPushServer) throws JSONException, IOException
@@ -355,6 +358,7 @@ public class LocationService extends IntentService
                 con.setRequestProperty("X-team", xTeam);
                 con.setRequestProperty("X-pass", xPass);
                 con.setRequestProperty("X-s", xSecret);
+                con.setRequestProperty("X-version", String.valueOf(version));
                 con.setChunkedStreamingMode(0);
                 // Send POST with JSON message as string
                 os = con.getOutputStream();
