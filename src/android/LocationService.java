@@ -232,7 +232,7 @@ public class LocationService extends IntentService
     private void handlePushTokenUpdates(String pushToken) {
         Log.d(TAG, "Handle push token updates...");
         try {
-            if (android.os.Build.VERSION.SDK_INT >= 26) {
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
                 String CHANNEL_ID = "LocationService_channel_01";
                 NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
                         "Token update",
@@ -265,7 +265,7 @@ public class LocationService extends IntentService
     }
 
     private void foregroundServicePriority() {
-        if (android.os.Build.VERSION.SDK_INT < 26) {
+        if (android.os.Build.VERSION.SDK_INT < 29) {
             return;
         }
         Log.d(TAG, "Set app to foreground service priority to complete the location service properly...");

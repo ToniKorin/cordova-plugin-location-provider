@@ -1,4 +1,7 @@
 ## ChangeLog
+#### Version 1.5.6 (2.7.2024)
+- Fixed Android 8 compatibility
+
 #### Version 1.5.5 (28.2.2024)
 - Added app version to service requests
 
