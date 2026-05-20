@@ -1,4 +1,8 @@
 ## ChangeLog
+
+#### Version 1.5.7 (20.5.2026)
+- Added FOREGROUND_SERVICE_LOCATION and POST_NOTIFICATIONS permission
+
 #### Version 1.5.6 (2.7.2024)
 - Fixed Android 8 compatibility
 

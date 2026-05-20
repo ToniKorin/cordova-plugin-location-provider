@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0" 
         xmlns:android="http://schemas.android.com/apk/res/android"
         id="cordova-plugin-location-provider" 
-        version="1.5.6">
+        version="1.5.7">
 
     <name>LocationProvider</name>
 
@@ -46,6 +46,8 @@
             <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+            <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
         </config-file>
 
         <source-file src="src/android/LocationProviderPlugin.java"  target-dir="src/com/tonikorin/cordova/plugin/LocationProvider" />
